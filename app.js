@@ -7,9 +7,31 @@ app.use(express.json())
 // Routes
 
 // Get All todos
-app.get('/', (_, res) => res.send('Hello From express'))
+app.get('/todos', async (_, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM todo;')
+    res.json({
+      rows,
+    })
+  } catch (err) {
+    /* handle error */
+    console.error(err.message)
+  }
+})
 
-// Get s todo
+// Get  todo
+app.get('/todos/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const todo = await pool.query('SELECT * FROM todo where todo_id  = $1', [
+      id,
+    ])
+    res.json(todo.rows[0])
+  } catch (err) {
+    /* handle error */
+    console.error(err.message)
+  }
+})
 
 // Create a todo
 app.post('/todos', async (req, res) => {
@@ -32,8 +54,40 @@ app.post('/todos', async (req, res) => {
 })
 
 // Update a todo
+app.put('/todos/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { description } = req.body
+
+    const updatedTodo = await pool.query(
+      'UPDATE todo SET description = $1 WHERE todo_id = $2',
+      [description, id]
+    )
+
+    res.json({
+      updatedTodo,
+    })
+  } catch (err) {
+    /* handle error */
+  }
+})
 
 // Delete a todo
+app.delete('/todos/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const deleteTodo = await pool.query('DELETE FROM todo WHERE todo_id = $1', [
+      id,
+    ])
+
+    res.json({
+      deleteTodo,
+    })
+  } catch (err) {
+    /* handle error */
+  }
+})
 
 const PORT = 3000
 app.listen(process.env.PORT || 3000, (_, res) =>
